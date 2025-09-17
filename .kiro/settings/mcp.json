@@ -1,0 +1,98 @@
+{
+  "mcpServers": {
+    "postgresql": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-postgresql"
+      ],
+      "env": {
+        "PG_HOST": "localhost",
+        "PG_PORT": "5432",
+        "PG_USER": "postgres",
+        "PG_PASSWORD": "",
+        "PG_DATABASE": "coins_for_change",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": true,
+      "autoApprove": [
+        "postgres_query",
+        "postgres_schema_info",
+        "postgres_list_tables"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/chris/github/cfc"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "read_file",
+        "list_directory",
+        "search_files",
+        "get_file_info",
+        "read_text_file"
+      ]
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git",
+        "--repository",
+        "/Users/chris/github/cfc"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "git_status",
+        "git_diff",
+        "git_log",
+        "git_show"
+      ]
+    },
+    "shell": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-shell"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": []
+    },
+    "time": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-time"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "get_current_time",
+        "convert_timezone",
+        "format_time"
+      ]
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "create_memory",
+        "search_memory",
+        "get_memory",
+        "search_nodes"
+      ]
+    }
+  }
+}

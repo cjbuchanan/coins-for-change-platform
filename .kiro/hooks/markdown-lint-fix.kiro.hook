@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "name": "Markdown Lint Fix",
+  "description": "Automatically runs markdownlint-cli2 with --fix option to correct common markdown formatting errors when markdown files are created or changed",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.md"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A markdown file has been created or modified. Please run `markdownlint-cli2 --fix` on the changed markdown files to automatically correct common formatting errors such as trailing whitespace, inconsistent heading styles, missing blank lines, and other markdown syntax issues."
+  }
+}
