@@ -39,21 +39,25 @@
 ### Configured MCP Servers
 
 #### Core Development Servers
+
 - **PostgreSQL**: Database operations, schema management, query execution
 - **Redis**: Cache management, session storage, real-time operations  
 - **Docker**: Container operations, image management, local development
 
 #### Integration & Monitoring Servers
+
 - **GitHub**: Repository management, issue tracking, pull request operations
 - **Kubernetes**: Cluster management, deployment operations, resource monitoring
 - **Prometheus**: Metrics querying, alerting rules, performance monitoring
 
 #### Utility Servers
+
 - **Filesystem**: Project file access and management
 - **Shell**: Command execution capabilities
 - **Testing**: Python pytest integration for test execution and coverage
 
 #### Optional Servers (Disabled by Default)
+
 - **Confluence**: Knowledge management and API documentation
 - **Vault**: Secrets management and credential storage
 

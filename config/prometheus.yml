@@ -1,0 +1,39 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # FastAPI services (when running)
+  - job_name: 'coins-for-change-services'
+    static_configs:
+      - targets: 
+        - 'host.docker.internal:8001'  # auth service
+        - 'host.docker.internal:8002'  # campaigns service
+        - 'host.docker.internal:8003'  # ideas service
+        - 'host.docker.internal:8004'  # coins service
+        - 'host.docker.internal:8005'  # search service
+        - 'host.docker.internal:8006'  # notifications service
+        - 'host.docker.internal:8007'  # analytics service
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # PostgreSQL exporter (if added later)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+
+  # Redis exporter (if added later)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 30s

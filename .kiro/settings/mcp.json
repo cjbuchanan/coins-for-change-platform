@@ -93,6 +93,21 @@
         "get_memory",
         "search_nodes"
       ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "env": {},
+      "disabled": false,
+      "autoApprove": [
+        "get_context",
+        "search_docs",
+        "resolve-library-id",
+        "get-library-docs"
+      ]
     }
   }
 }

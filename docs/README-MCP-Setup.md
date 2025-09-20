@@ -5,11 +5,13 @@ This directory contains the MCP (Model Context Protocol) server configuration an
 ## Quick Start
 
 1. **Run the setup script:**
+
    ```bash
    ./scripts/setup-mcp-servers.sh
    ```
 
 2. **Test the configuration:**
+
    ```bash
    python3 scripts/test-mcp-servers.py
    ```
@@ -22,6 +24,7 @@ This directory contains the MCP (Model Context Protocol) server configuration an
 ## Available MCP Servers
 
 ### Core Development Servers
+
 - **PostgreSQL**: Database operations and schema management
 - **Redis**: Cache management and session storage  
 - **Docker**: Container operations and image management
@@ -29,11 +32,13 @@ This directory contains the MCP (Model Context Protocol) server configuration an
 - **Shell**: Command execution (use with caution)
 
 ### Integration Servers
+
 - **GitHub**: Repository management and issue tracking
 - **Kubernetes**: Cluster management and deployments
 - **Prometheus**: Metrics querying and monitoring
 
 ### Testing Servers
+
 - **Testing**: Python pytest integration
 - **Confluence**: Documentation management (optional)
 - **Vault**: Secrets management (optional)
@@ -48,6 +53,7 @@ This directory contains the MCP (Model Context Protocol) server configuration an
 ## Prerequisites
 
 1. **Install uv/uvx:**
+
    ```bash
    # Using curl
    curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -86,6 +92,7 @@ If you encounter issues:
 ## Support
 
 For additional help:
+
 - Review the comprehensive documentation in `docs/mcp-server-configuration.md`
 - Check Kiro's MCP documentation
 - Test individual servers using the test script
