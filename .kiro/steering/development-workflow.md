@@ -5,6 +5,7 @@ This document defines the development workflow, branching strategy, and collabor
 ## Git Workflow and Branching Strategy
 
 ### Branch Structure
+
 ```
 main                    # Production-ready code
 ├── develop            # Integration branch for features
@@ -15,12 +16,14 @@ main                    # Production-ready code
 ```
 
 ### Branch Naming Conventions
+
 - **Feature branches**: `feature/CFC-{ticket-number}-{short-description}`
 - **Bug fixes**: `bugfix/CFC-{ticket-number}-{short-description}`
 - **Hotfixes**: `hotfix/CFC-{ticket-number}-{short-description}`
 - **Releases**: `release/v{major}.{minor}.{patch}`
 
 ### Commit Message Format
+
 ```
 type(scope): short description
 
@@ -34,6 +37,7 @@ Co-authored-by: Name <email@example.com>
 ```
 
 **Commit Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -43,6 +47,7 @@ Co-authored-by: Name <email@example.com>
 - `chore`: Maintenance tasks
 
 **Examples:**
+
 ```
 feat(coins): implement coin reallocation functionality
 
@@ -67,6 +72,7 @@ when system clock was slightly out of sync.
 ## Development Process
 
 ### Task Execution Workflow
+
 1. **Pick a Task**: Select from the implementation plan (tasks.md)
 2. **Create Branch**: Create feature branch from develop
 3. **Implement**: Follow coding standards and business rules
@@ -78,7 +84,9 @@ when system clock was slightly out of sync.
 9. **Merge**: Merge to develop after approval and CI passes
 
 ### Definition of Done
+
 A task is considered complete when:
+
 - [ ] All acceptance criteria are met
 - [ ] Code follows established coding standards
 - [ ] Unit tests written and passing (minimum 80% coverage)
@@ -93,6 +101,7 @@ A task is considered complete when:
 ### Code Review Guidelines
 
 #### What to Look For
+
 1. **Correctness**: Does the code do what it's supposed to do?
 2. **Security**: Are there any security vulnerabilities?
 3. **Performance**: Are there any obvious performance issues?
@@ -101,6 +110,7 @@ A task is considered complete when:
 6. **Standards Compliance**: Does it follow our coding standards?
 
 #### Review Checklist
+
 - [ ] Business logic correctly implements requirements
 - [ ] Error handling is comprehensive and appropriate
 - [ ] Input validation is thorough
@@ -113,6 +123,7 @@ A task is considered complete when:
 - [ ] No hardcoded values or secrets
 
 #### Review Comments Guidelines
+
 - Be constructive and specific
 - Explain the "why" behind suggestions
 - Distinguish between "must fix" and "nice to have"
@@ -122,6 +133,7 @@ A task is considered complete when:
 ## Testing Strategy
 
 ### Test Pyramid
+
 ```
     /\
    /  \     E2E Tests (Few)
@@ -141,6 +153,7 @@ Unit Tests (Many)
 ### Test Categories and Requirements
 
 #### Unit Tests (Required for all tasks)
+
 - Test individual functions and methods in isolation
 - Mock external dependencies
 - Cover happy path, edge cases, and error conditions
@@ -148,6 +161,7 @@ Unit Tests (Many)
 - Fast execution (< 1 second per test)
 
 #### Integration Tests (Required for API endpoints)
+
 - Test API endpoints with real database
 - Test service interactions
 - Test authentication and authorization
@@ -155,12 +169,14 @@ Unit Tests (Many)
 - Moderate execution time (< 10 seconds per test)
 
 #### End-to-End Tests (Required for major features)
+
 - Test complete user workflows
 - Test cross-service functionality
 - Use test environment similar to production
 - Slower execution acceptable (< 5 minutes total)
 
 ### Test Data Management
+
 ```python
 # Use factories for test data creation
 @pytest.fixture
@@ -189,12 +205,14 @@ class CampaignFactory:
 ## Environment Management
 
 ### Environment Types
+
 1. **Development**: Local development environment
 2. **Testing**: Automated testing environment
 3. **Staging**: Pre-production testing
 4. **Production**: Live system
 
 ### Configuration Management
+
 ```python
 # Use environment-specific configuration
 class Settings(BaseSettings):
@@ -219,6 +237,7 @@ class ProductionSettings(Settings):
 ```
 
 ### Local Development Setup
+
 ```bash
 # 1. Clone repository
 git clone <repository-url>
@@ -255,7 +274,9 @@ uvicorn main:app --reload
 ## Quality Assurance
 
 ### Automated Quality Checks
+
 All code must pass these automated checks:
+
 - **Linting**: flake8, mypy for type checking
 - **Formatting**: black, isort for consistent formatting
 - **Security**: bandit for security vulnerability scanning
@@ -264,6 +285,7 @@ All code must pass these automated checks:
 - **Documentation**: Ensure docstrings are present and valid
 
 ### Pre-commit Hooks
+
 ```yaml
 # .pre-commit-config.yaml
 repos:
@@ -296,6 +318,7 @@ repos:
 ```
 
 ### Continuous Integration Pipeline
+
 ```yaml
 # .github/workflows/ci.yml
 name: CI Pipeline
@@ -333,38 +356,197 @@ jobs:
 ## Documentation Standards
 
 ### Code Documentation
+
 - All public functions and classes must have docstrings
 - Use Google-style docstrings
 - Include type hints for all parameters and return values
 - Document exceptions that can be raised
 
 ### API Documentation
+
 - FastAPI automatically generates OpenAPI documentation
 - Provide detailed descriptions for all endpoints
 - Include example requests and responses
 - Document all possible error codes
 
 ### Architecture Documentation
+
 - Keep architecture diagrams up to date
 - Document major design decisions and rationale
 - Maintain deployment and operational documentation
 - Update README files for each service
 
+## Kubernetes Deployment Workflow
+
+### Container Development
+
+```bash
+# 1. Build container image
+docker build -t coins-for-change/auth-service:latest ./services/auth
+
+# 2. Test container locally
+docker run -p 8000:8000 coins-for-change/auth-service:latest
+
+# 3. Tag for registry
+docker tag coins-for-change/auth-service:latest registry.example.com/coins-for-change/auth-service:v1.0.0
+
+# 4. Push to registry
+docker push registry.example.com/coins-for-change/auth-service:v1.0.0
+```
+
+### Kubernetes Manifests
+
+```yaml
+# deployment.yaml - Service deployment template
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: coins-for-change
+  labels:
+    app: auth-service
+    version: v1.0.0
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+        version: v1.0.0
+    spec:
+      containers:
+      - name: auth-service
+        image: registry.example.com/coins-for-change/auth-service:v1.0.0
+        ports:
+        - containerPort: 8000
+        env:
+        - name: SERVICE_NAME
+          value: "auth-service"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        envFrom:
+        - configMapRef:
+            name: app-config
+        - secretRef:
+            name: app-secrets
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /startup
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+```
+
+### Deployment Process
+
+1. **Development**: Test locally with Docker Compose
+2. **Build**: Create container images with proper tags
+3. **Test**: Run integration tests against containers
+4. **Deploy**: Apply Kubernetes manifests to cluster
+5. **Verify**: Check health endpoints and logs
+6. **Monitor**: Watch metrics and alerts
+
+### Kubernetes Commands for Development
+
+```bash
+# Apply manifests
+kubectl apply -f k8s/
+
+# Check deployment status
+kubectl get deployments -n coins-for-change
+
+# View pod logs
+kubectl logs -f deployment/auth-service -n coins-for-change
+
+# Port forward for local testing
+kubectl port-forward service/auth-service 8000:80 -n coins-for-change
+
+# Execute commands in pod
+kubectl exec -it deployment/auth-service -n coins-for-change -- /bin/bash
+
+# Scale deployment
+kubectl scale deployment auth-service --replicas=5 -n coins-for-change
+
+# Rolling update
+kubectl set image deployment/auth-service auth-service=registry.example.com/coins-for-change/auth-service:v1.1.0 -n coins-for-change
+
+# Check rollout status
+kubectl rollout status deployment/auth-service -n coins-for-change
+
+# Rollback if needed
+kubectl rollout undo deployment/auth-service -n coins-for-change
+```
+
+### Environment-Specific Deployments
+
+- **Development**: Single replica, relaxed resource limits
+- **Staging**: Production-like setup with reduced resources
+- **Production**: High availability, strict resource limits, monitoring
+
 ## Performance Guidelines
 
 ### Database Performance
+
 - Use database indexes appropriately
 - Implement query optimization
 - Use connection pooling
 - Monitor slow queries and optimize
 
 ### API Performance
+
 - Implement response caching where appropriate
 - Use pagination for large result sets
 - Implement rate limiting
 - Monitor response times and optimize slow endpoints
 
 ### Monitoring and Alerting
+
 - Set up performance monitoring
 - Create alerts for critical metrics
 - Monitor resource usage
@@ -373,6 +555,7 @@ jobs:
 ## Security Guidelines
 
 ### Secure Development Practices
+
 - Never commit secrets to version control
 - Use environment variables for configuration
 - Implement proper input validation
@@ -381,12 +564,14 @@ jobs:
 - Log security events for audit purposes
 
 ### Dependency Management
+
 - Regularly update dependencies
 - Scan for known vulnerabilities
 - Use lock files for reproducible builds
 - Review new dependencies before adding
 
 ### Data Protection
+
 - Encrypt sensitive data at rest and in transit
 - Implement proper access controls
 - Follow data retention policies
@@ -395,6 +580,7 @@ jobs:
 ## Troubleshooting and Debugging
 
 ### Common Issues and Solutions
+
 1. **Database Connection Issues**
    - Check connection string format
    - Verify database is running
@@ -414,6 +600,7 @@ jobs:
    - Monitor resource usage
 
 ### Debugging Tools and Techniques
+
 - Use structured logging with correlation IDs
 - Implement health check endpoints
 - Use distributed tracing for complex workflows

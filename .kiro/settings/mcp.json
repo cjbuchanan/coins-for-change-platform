@@ -9,15 +9,85 @@
         "PG_HOST": "localhost",
         "PG_PORT": "5432",
         "PG_USER": "postgres",
-        "PG_PASSWORD": "",
+        "PG_PASSWORD": "postgres",
         "PG_DATABASE": "coins_for_change",
         "FASTMCP_LOG_LEVEL": "ERROR"
       },
-      "disabled": true,
+      "disabled": false,
       "autoApprove": [
         "postgres_query",
         "postgres_schema_info",
         "postgres_list_tables"
+      ]
+    },
+    "docker": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-docker"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "docker_ps",
+        "docker_images",
+        "docker_logs",
+        "docker_inspect",
+        "list_containers"
+      ]
+    },
+    "kubernetes": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-kubernetes"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "kubectl_get",
+        "kubectl_describe",
+        "kubectl_logs",
+        "kubectl_get_by_name",
+        "kubectl_get_by_kind_in_namespace"
+      ]
+    },
+    "redis": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-redis"
+      ],
+      "env": {
+        "REDIS_URL": "redis://localhost:6379",
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": true,
+      "autoApprove": [
+        "redis_get",
+        "redis_set",
+        "redis_keys",
+        "redis_info"
+      ]
+    },
+    "sqlite": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-sqlite",
+        "--db-path",
+        "./coins_for_change.db"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": true,
+      "autoApprove": [
+        "read-query",
+        "write-query",
+        "create-table",
+        "list-tables",
+        "describe-table"
       ]
     },
     "filesystem": {

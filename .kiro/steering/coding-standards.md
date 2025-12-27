@@ -5,6 +5,7 @@ This document defines the coding standards, patterns, and best practices for the
 ## Code Style and Formatting
 
 ### Python Code Style
+
 - Follow PEP 8 style guidelines
 - Use Black for code formatting with line length of 88 characters
 - Use isort for import sorting with Black-compatible settings
@@ -13,6 +14,7 @@ This document defines the coding standards, patterns, and best practices for the
 - Maximum class length: 200 lines
 
 ### Naming Conventions
+
 - **Variables and functions**: snake_case (e.g., `user_id`, `get_campaign_by_id`)
 - **Classes**: PascalCase (e.g., `CampaignService`, `UserRepository`)
 - **Constants**: UPPER_SNAKE_CASE (e.g., `MAX_COIN_ALLOCATION`, `DEFAULT_PAGE_SIZE`)
@@ -20,6 +22,7 @@ This document defines the coding standards, patterns, and best practices for the
 - **API endpoints**: kebab-case for multi-word resources (e.g., `/campaign-members`)
 
 ### File and Directory Structure
+
 ```
 src/
 ├── shared/                 # Shared utilities and common code
@@ -44,6 +47,7 @@ src/
 ## Database Patterns
 
 ### Model Definitions
+
 ```python
 # Always include audit fields
 class BaseModel(Base):
@@ -69,6 +73,7 @@ class Campaign(BaseModel):
 ```
 
 ### Repository Pattern
+
 ```python
 class BaseRepository:
     def __init__(self, session: AsyncSession):
@@ -103,6 +108,7 @@ async def allocate_coins(
 ## API Design Patterns
 
 ### Endpoint Structure
+
 ```python
 # Use consistent URL patterns
 @router.get("/campaigns/{campaign_id}/ideas")
@@ -129,6 +135,7 @@ class IdeaResponse(BaseModel):
 ```
 
 ### Error Handling
+
 ```python
 # Use consistent error response format
 class APIError(Exception):
@@ -162,6 +169,7 @@ async def api_error_handler(request: Request, exc: APIError):
 ## Testing Standards
 
 ### Unit Test Structure
+
 ```python
 # Use descriptive test names
 def test_allocate_coins_success_updates_balance_and_creates_allocation():
@@ -193,6 +201,7 @@ async def test_allocate_coins_to_accepted_idea_raises_error():
 ```
 
 ### Integration Test Patterns
+
 ```python
 # Use test fixtures for common setup
 @pytest.fixture
@@ -211,9 +220,251 @@ async def test_complete_idea_submission_workflow():
     # Verify coin expiration
 ```
 
+## Kubernetes-Native Development
+
+### Health Check Implementation
+
+```python
+# health.py - Kubernetes-compatible health checks
+from fastapi import APIRouter, HTTPException, status
+from sqlalchemy import text
+import asyncio
+
+router = APIRouter()
+
+@router.get("/health")
+async def health_check():
+    """Kubernetes liveness probe - basic service health"""
+    return {"status": "healthy", "service": "coins-for-change"}
+
+@router.get("/ready")
+async def readiness_check():
+    """Kubernetes readiness probe - service ready to handle requests"""
+    checks = {}
+    
+    # Database connectivity check
+    try:
+        async with get_db_session() as session:
+            await session.execute(text("SELECT 1"))
+        checks["database"] = "ready"
+    except Exception as e:
+        checks["database"] = f"not_ready: {str(e)}"
+    
+    # Cache connectivity check
+    try:
+        redis_client = get_redis_client()
+        await redis_client.ping()
+        checks["cache"] = "ready"
+    except Exception as e:
+        checks["cache"] = f"not_ready: {str(e)}"
+    
+    # Overall readiness
+    all_ready = all("ready" in status for status in checks.values())
+    
+    if not all_ready:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"status": "not_ready", "checks": checks}
+        )
+    
+    return {"status": "ready", "checks": checks}
+
+@router.get("/startup")
+async def startup_check():
+    """Kubernetes startup probe - service initialization complete"""
+    # Check if service has completed initialization
+    if not app_initialized:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"status": "starting", "message": "Service still initializing"}
+        )
+    
+    return {"status": "started", "service": "coins-for-change"}
+```
+
+### Configuration Management
+
+```python
+# config.py - Kubernetes-friendly configuration
+from pydantic import BaseSettings
+from typing import Optional
+import os
+
+class Settings(BaseSettings):
+    # Service configuration
+    service_name: str = "coins-for-change"
+    service_version: str = "1.0.0"
+    
+    # Database configuration
+    database_url: str
+    database_pool_size: int = 20
+    database_max_overflow: int = 50
+    
+    # Cache configuration
+    redis_url: str = "redis://localhost:6379"
+    redis_max_connections: int = 100
+    
+    # Kubernetes-specific settings
+    pod_name: Optional[str] = os.getenv("HOSTNAME")
+    pod_namespace: Optional[str] = os.getenv("POD_NAMESPACE")
+    pod_ip: Optional[str] = os.getenv("POD_IP")
+    
+    # Observability
+    otel_service_name: str = "coins-for-change"
+    otel_exporter_jaeger_endpoint: Optional[str] = None
+    prometheus_metrics_port: int = 9090
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = False
+```
+
+### Resource Management
+
+```python
+# Implement graceful shutdown for Kubernetes
+import signal
+import asyncio
+from contextlib import asynccontextmanager
+
+class GracefulShutdown:
+    def __init__(self):
+        self.shutdown = False
+        self.tasks = set()
+    
+    def signal_handler(self, signum, frame):
+        print(f"Received signal {signum}, initiating graceful shutdown...")
+        self.shutdown = True
+    
+    async def cleanup(self):
+        """Cleanup resources before shutdown"""
+        # Cancel running tasks
+        for task in self.tasks:
+            task.cancel()
+        
+        # Wait for tasks to complete
+        if self.tasks:
+            await asyncio.gather(*self.tasks, return_exceptions=True)
+        
+        # Close database connections
+        await database.disconnect()
+        
+        # Close Redis connections
+        await redis_client.close()
+
+# Register signal handlers
+shutdown_handler = GracefulShutdown()
+signal.signal(signal.SIGTERM, shutdown_handler.signal_handler)
+signal.signal(signal.SIGINT, shutdown_handler.signal_handler)
+```
+
+### Logging for Kubernetes
+
+```python
+# logging_config.py - Structured logging for Kubernetes
+import logging
+import json
+import os
+from datetime import datetime
+
+class KubernetesFormatter(logging.Formatter):
+    def format(self, record):
+        log_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "service": os.getenv("SERVICE_NAME", "coins-for-change"),
+            "pod_name": os.getenv("HOSTNAME"),
+            "pod_namespace": os.getenv("POD_NAMESPACE"),
+            "correlation_id": getattr(record, "correlation_id", None),
+        }
+        
+        # Add exception info if present
+        if record.exc_info:
+            log_entry["exception"] = self.formatException(record.exc_info)
+        
+        return json.dumps(log_entry)
+
+# Configure logging for Kubernetes
+def setup_kubernetes_logging():
+    handler = logging.StreamHandler()
+    handler.setFormatter(KubernetesFormatter())
+    
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    
+    return logger
+```
+
+### Metrics for Kubernetes
+
+```python
+# metrics.py - Prometheus metrics for Kubernetes monitoring
+from prometheus_client import Counter, Histogram, Gauge, start_http_server
+import time
+
+# Business metrics
+coin_allocations_total = Counter(
+    'coin_allocations_total',
+    'Total number of coin allocations',
+    ['campaign_id', 'user_type']
+)
+
+idea_submissions_total = Counter(
+    'idea_submissions_total',
+    'Total number of idea submissions',
+    ['campaign_id', 'status']
+)
+
+# Technical metrics
+http_requests_total = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status_code']
+)
+
+http_request_duration_seconds = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request duration in seconds',
+    ['method', 'endpoint']
+)
+
+database_connections_active = Gauge(
+    'database_connections_active',
+    'Number of active database connections'
+)
+
+# Middleware for automatic metrics collection
+async def metrics_middleware(request, call_next):
+    start_time = time.time()
+    
+    response = await call_next(request)
+    
+    # Record metrics
+    duration = time.time() - start_time
+    http_requests_total.labels(
+        method=request.method,
+        endpoint=request.url.path,
+        status_code=response.status_code
+    ).inc()
+    
+    http_request_duration_seconds.labels(
+        method=request.method,
+        endpoint=request.url.path
+    ).observe(duration)
+    
+    return response
+
+# Start Prometheus metrics server
+def start_metrics_server(port: int = 9090):
+    start_http_server(port)
+```
+
 ## Security Guidelines
 
 ### Authentication and Authorization
+
 ```python
 # Always validate permissions at multiple levels
 async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
@@ -235,6 +486,7 @@ async def can_modify_idea(user: User, idea: Idea) -> bool:
 ```
 
 ### Input Validation
+
 ```python
 # Always validate and sanitize input
 class IdeaCreateRequest(BaseModel):
@@ -253,6 +505,7 @@ class IdeaCreateRequest(BaseModel):
 ## Performance Guidelines
 
 ### Database Optimization
+
 ```python
 # Use appropriate indexes
 class Campaign(BaseModel):
@@ -278,6 +531,7 @@ async def get_campaigns_paginated(pagination: PaginationParams):
 ```
 
 ### Caching Strategy
+
 ```python
 # Cache frequently accessed data
 @cache(expire=300)  # 5 minutes
@@ -294,6 +548,7 @@ async def update_campaign(campaign_id: UUID, updates: CampaignUpdate):
 ## Documentation Standards
 
 ### Code Documentation
+
 ```python
 class CoinService:
     """Service for managing coin economy operations.
@@ -326,6 +581,7 @@ class CoinService:
 ```
 
 ### API Documentation
+
 - Use FastAPI's automatic OpenAPI generation
 - Provide detailed descriptions for all endpoints
 - Include example requests and responses
@@ -334,6 +590,7 @@ class CoinService:
 ## Logging and Monitoring
 
 ### Structured Logging
+
 ```python
 import structlog
 
@@ -361,6 +618,7 @@ logger.error(
 ```
 
 ### Metrics and Tracing
+
 ```python
 # Add custom metrics for business events
 from opentelemetry import metrics

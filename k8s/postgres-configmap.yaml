@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  namespace: coins-for-change
+data:
+  POSTGRES_DB: coins_for_change
+  POSTGRES_USER: postgres
+  # PostgreSQL configuration
+  postgresql.conf: |
+    # Connection settings
+    max_connections = 100
+    shared_buffers = 128MB
+
+    # Performance settings
+    effective_cache_size = 256MB
+    maintenance_work_mem = 64MB
+    checkpoint_completion_target = 0.9
+    wal_buffers = 16MB
+
+    # Logging settings
+    log_destination = 'stderr'
+    logging_collector = on
+    log_directory = 'pg_log'
+    log_filename = 'postgresql-%Y-%m-%d_%H%M%S.log'
+    log_statement = 'all'
+    log_min_duration_statement = 1000
+
+    # Connection logging
+    log_connections = on
+    log_disconnections = on

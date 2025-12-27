@@ -1,0 +1,29 @@
+apiVersion: v2
+name: coins-for-change
+description: A collaborative ideation and prioritization platform using coin-based allocation
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+home: https://github.com/your-org/coins-for-change-platform
+sources:
+  - https://github.com/your-org/coins-for-change-platform
+maintainers:
+  - name: Coins for Change Team
+    email: team@coinsforchange.com
+keywords:
+  - collaboration
+  - ideation
+  - prioritization
+  - fastapi
+  - postgresql
+dependencies:
+  - name: postgresql
+    version: "15.5.32"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: redis
+    version: "20.1.7"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+annotations:
+  category: Collaboration

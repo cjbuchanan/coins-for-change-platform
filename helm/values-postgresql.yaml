@@ -1,0 +1,105 @@
+# Bitnami PostgreSQL Helm Chart Values
+# Reference: https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+
+# PostgreSQL configuration
+postgresql:
+  # Database configuration
+  database: coins_for_change
+  username: postgres
+  # Password will be auto-generated or can be set via --set
+  # postgresqlPassword: "postgres123"
+
+  # Performance and connection settings
+  maxConnections: 100
+  sharedBuffers: 128MB
+  effectiveCacheSize: 256MB
+
+  # Enable logging for development
+  logStatement: "all"
+  logMinDurationStatement: 1000
+  logConnections: true
+  logDisconnections: true
+
+# Authentication
+auth:
+  # Enable password authentication
+  enablePostgresUser: true
+  # Auto-generate password if not provided
+  # postgresPassword: "postgres123"
+  database: coins_for_change
+  username: postgres
+
+# Primary configuration
+primary:
+  # Resource allocation
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
+  # Persistence
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: "" # Use default storage class
+    accessModes:
+      - ReadWriteOnce
+
+  # Pod security context
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      drop:
+        - ALL
+
+# Service configuration
+service:
+  type: ClusterIP
+  ports:
+    postgresql: 5432
+
+# Metrics and monitoring
+metrics:
+  enabled: true
+  service:
+    type: ClusterIP
+    ports:
+      metrics: 9187
+  serviceMonitor:
+    enabled: false # Enable if using Prometheus Operator
+
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 50m
+    limits:
+      memory: 128Mi
+      cpu: 100m
+
+# Network policies (optional)
+networkPolicy:
+  enabled: false
+
+# Pod disruption budget
+pdb:
+  create: true
+  minAvailable: 1
+
+# Backup configuration (for production)
+backup:
+  enabled: false
+  # cronjob:
+  #   schedule: "0 2 * * *"
+  #   storage:
+  #     size: 10Gi

@@ -1,0 +1,38 @@
+# Simple test container for database connectivity
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install minimal Python dependencies
+RUN pip install \
+    asyncpg==0.29.0 \
+    sqlalchemy[asyncio]==2.0.36 \
+    pydantic==2.8.2 \
+    pydantic-settings==2.4.0
+
+# Create non-root user
+RUN groupadd -r testuser && useradd -r -g testuser testuser
+
+# Set work directory
+WORKDIR /app
+
+# Copy only the necessary files for testing
+COPY src/shared/ ./src/shared/
+COPY scripts/test_database_connection.py ./scripts/
+
+# Change ownership to testuser
+RUN chown -R testuser:testuser /app
+
+# Switch to non-root user
+USER testuser
+
+# Default command
+CMD ["python", "scripts/test_database_connection.py"]

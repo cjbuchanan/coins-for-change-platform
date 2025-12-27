@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: database-test
+  namespace: coins-for-change
+  labels:
+    app: coins-for-change
+    component: test
+spec:
+  template:
+    metadata:
+      labels:
+        app: coins-for-change
+        component: test
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: database-test
+          image: coins-for-change-test:latest
+          imagePullPolicy: Never # For local development
+          env:
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://app_user:app_password123@postgres-postgresql.coins-for-change.svc.cluster.local:5432/coins_for_change"
+            - name: ENVIRONMENT
+              value: "development"
+            - name: DEBUG
+              value: "true"
+            - name: DATABASE_POOL_SIZE
+              value: "5"
+            - name: DATABASE_MAX_OVERFLOW
+              value: "10"
+            - name: DATABASE_POOL_TIMEOUT
+              value: "30"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
+  backoffLimit: 3

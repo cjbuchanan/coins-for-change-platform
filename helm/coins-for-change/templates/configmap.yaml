@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "coins-for-change.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "coins-for-change.labels" . | nindent 4 }}
+data:
+  # Application configuration
+  ENVIRONMENT: {{ .Values.app.environment | quote }}
+  DEBUG: {{ .Values.app.debug | quote }}
+  LOG_LEVEL: {{ .Values.app.logLevel | quote }}
+  
+  # Database configuration
+  DATABASE_POOL_SIZE: {{ .Values.database.poolSize | quote }}
+  DATABASE_MAX_OVERFLOW: {{ .Values.database.maxOverflow | quote }}
+  DATABASE_POOL_TIMEOUT: {{ .Values.database.poolTimeout | quote }}
+  
+  {{- if .Values.redis.enabled }}
+  # Redis configuration
+  REDIS_URL: "redis://{{ include "coins-for-change.fullname" . }}-redis-master:6379/0"
+  REDIS_MAX_CONNECTIONS: "100"
+  {{- end }}
+  
+  # CORS configuration
+  CORS_ORIGINS: {{ .Values.config.corsOrigins | quote }}
+  
+  # Rate limiting
+  RATE_LIMIT_PER_MINUTE: {{ .Values.config.rateLimitPerMinute | quote }}
+  RATE_LIMIT_PER_HOUR: {{ .Values.config.rateLimitPerHour | quote }}
+  
+  # Observability
+  OTEL_SERVICE_NAME: {{ .Values.config.otelServiceName | quote }}
+  PROMETHEUS_METRICS_PORT: {{ .Values.config.prometheusMetricsPort | quote }}
+  
+  {{- if .Values.monitoring.tracing.enabled }}
+  OTEL_EXPORTER_JAEGER_ENDPOINT: {{ .Values.monitoring.tracing.jaegerEndpoint | quote }}
+  {{- end }}
+  
+  # JWT configuration
+  JWT_ALGORITHM: "HS256"
+  JWT_EXPIRATION_SECONDS: "3600"
